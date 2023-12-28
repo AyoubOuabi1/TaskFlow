@@ -1,28 +1,30 @@
-package com.tasktrak.entities;
+package com.ayoub.taskflow.entities;
 
+import com.ayoub.taskflow.entities.enums.Role;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Data
-@Builder
-@NoArgsConstructor
 @AllArgsConstructor
-//@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
-public class User {
+@NoArgsConstructor
+@Builder
+public class User  {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private String firstName;
+    private String lastName;
+    private String email;
+    private int token;
+    private String password;
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
-    private String username;
-    private int tokensForTaskModification;
-    private int tokensForTaskDeletion;
 
-    private boolean isManager;
-    @ManyToOne
-    private User manager;
 
 }

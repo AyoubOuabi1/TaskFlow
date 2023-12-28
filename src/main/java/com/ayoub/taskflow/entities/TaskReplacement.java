@@ -1,11 +1,12 @@
 package com.ayoub.taskflow.entities;
 
-import com.ayoub.taskflow.entities.enums.TaskStatus;
+import com.ayoub.taskflow.entities.enums.TaskAction;
+import com.ayoub.taskflow.entities.enums.TaskReplacementStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Getter
@@ -13,31 +14,31 @@ import java.util.Objects;
 @ToString
 @RequiredArgsConstructor
 @Entity
-public class Task {
+public class TaskReplacement {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private Long id;
 
-    private String title;
+    @ManyToOne
+    @JoinColumn(name = "task_id")
+    private Task task;
 
-    private String description;
+    private LocalDateTime dateTime;
 
-    private LocalDate creationDate;
+    @ManyToOne
+    @JoinColumn(name = "old_user_id")
+    private User oldUser;
 
-    private LocalDate startDate;
-
-    private LocalDate deadline;
+    @ManyToOne
+    @JoinColumn(name = "new_user_id")
+    private User newUser;
 
     @Enumerated(EnumType.STRING)
-    private TaskStatus status;
+    private TaskAction action;
 
-    @ManyToOne
-    @JoinColumn(name = "created_by_id")
-    private User createdBy;
-
-    @ManyToOne
-    @JoinColumn(name = "assigned_to_id")
-    private User assignedTo;
+    @Enumerated(EnumType.STRING)
+    private TaskReplacementStatus status;
 
     @Override
     public final boolean equals(Object o) {
@@ -46,8 +47,8 @@ public class Task {
         Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        Task task = (Task) o;
-        return getId() != null && Objects.equals(getId(), task.getId());
+        TaskReplacement that = (TaskReplacement) o;
+        return getId() != null && Objects.equals(getId(), that.getId());
     }
 
     @Override
