@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+    <changeSet id="1704032191093-1" author="HP (generated)">
+        <createTable tableName="requests">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_requests"/>
+            </column>
+            <column name="new_assignee_id" type="BIGINT"/>
+            <column name="created_by_id" type="BIGINT"/>
+            <column name="old_task_id" type="BIGINT"/>
+            <column name="new_task_id" type="BIGINT"/>
+            <column name="request_status" type="VARCHAR(255)"/>
+            <column name="request_type" type="VARCHAR(255)"/>
+            <column name="request_date" type="DATE"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1704032191093-2" author="HP (generated)">
+        <createTable tableName="tags">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_tags"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1704032191093-3" author="HP (generated)">
+        <createTable tableName="task_tags">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_task_tags"/>
+            </column>
+            <column name="task_id" type="BIGINT"/>
+            <column name="tag_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1704032191093-4" author="HP (generated)">
+        <createTable tableName="tasks">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_tasks"/>
+            </column>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="start_date" type="DATE"/>
+            <column name="end_date" type="DATE"/>
+            <column name="status" type="VARCHAR(255)"/>
+            <column name="created_by_id" type="BIGINT"/>
+            <column name="assignee_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1704032191093-5" author="HP (generated)">
+        <createTable tableName="users">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_users"/>
+            </column>
+            <column name="username" type="VARCHAR(255)"/>
+            <column name="role" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1704032191093-6" author="HP (generated)">
+        <addForeignKeyConstraint baseColumnNames="created_by_id" baseTableName="requests"
+                                 constraintName="FK_REQUESTS_ON_CREATED_BY" referencedColumnNames="id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1704032191093-7" author="HP (generated)">
+        <addForeignKeyConstraint baseColumnNames="new_assignee_id" baseTableName="requests"
+                                 constraintName="FK_REQUESTS_ON_NEW_ASSIGNEE" referencedColumnNames="id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1704032191093-8" author="HP (generated)">
+        <addForeignKeyConstraint baseColumnNames="new_task_id" baseTableName="requests"
+                                 constraintName="FK_REQUESTS_ON_NEW_TASK" referencedColumnNames="id"
+                                 referencedTableName="tasks"/>
+    </changeSet>
+    <changeSet id="1704032191093-9" author="HP (generated)">
+        <addForeignKeyConstraint baseColumnNames="old_task_id" baseTableName="requests"
+                                 constraintName="FK_REQUESTS_ON_OLD_TASK" referencedColumnNames="id"
+                                 referencedTableName="tasks"/>
+    </changeSet>
+    <changeSet id="1704032191093-10" author="HP (generated)">
+        <addForeignKeyConstraint baseColumnNames="assignee_id" baseTableName="tasks"
+                                 constraintName="FK_TASKS_ON_ASSIGNEE" referencedColumnNames="id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1704032191093-11" author="HP (generated)">
+        <addForeignKeyConstraint baseColumnNames="created_by_id" baseTableName="tasks"
+                                 constraintName="FK_TASKS_ON_CREATED_BY" referencedColumnNames="id"
+                                 referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1704032191093-12" author="HP (generated)">
+        <addForeignKeyConstraint baseColumnNames="tag_id" baseTableName="task_tags" constraintName="FK_TASK_TAGS_ON_TAG"
+                                 referencedColumnNames="id" referencedTableName="tags"/>
+    </changeSet>
+    <changeSet id="1704032191093-13" author="HP (generated)">
+        <addForeignKeyConstraint baseColumnNames="task_id" baseTableName="task_tags"
+                                 constraintName="FK_TASK_TAGS_ON_TASK" referencedColumnNames="id"
+                                 referencedTableName="tasks"/>
+    </changeSet>
+    <changeSet id="1704032191093-14" author="HP (generated)">
+        <dropForeignKeyConstraint baseTableName="task_replacement" constraintName="FK7ol3b1204b15cjsblydf6brbh"/>
+    </changeSet>
+    <changeSet id="1704032191093-15" author="HP (generated)">
+        <dropForeignKeyConstraint baseTableName="tasks_to_tags" constraintName="FK8adtqo0igu5luudwaeupydqbh"/>
+    </changeSet>
+    <changeSet id="1704032191093-16" author="HP (generated)">
+        <dropForeignKeyConstraint baseTableName="tasks_to_tags" constraintName="FKe8vt4tlxl0k2k3t201ftreag2"/>
+    </changeSet>
+    <changeSet id="1704032191093-17" author="HP (generated)">
+        <dropForeignKeyConstraint baseTableName="task_replacement" constraintName="FKgaq4v50rqlaoxx7lv1wxyuk2"/>
+    </changeSet>
+    <changeSet id="1704032191093-18" author="HP (generated)">
+        <dropForeignKeyConstraint baseTableName="task_replacement" constraintName="FKk85ki4rby6jr15qra01b79u2w"/>
+    </changeSet>
+    <changeSet id="1704032191093-19" author="HP (generated)">
+        <dropForeignKeyConstraint baseTableName="task" constraintName="FKlkkcvg9jw7xecpanqsyr79ec3"/>
+    </changeSet>
+    <changeSet id="1704032191093-20" author="HP (generated)">
+        <dropForeignKeyConstraint baseTableName="task" constraintName="FKr3rt5py4h7ntv23bltifrwr4w"/>
+    </changeSet>
+    <changeSet id="1704032191093-21" author="HP (generated)">
+        <dropTable cascadeConstraints="true" tableName="tag"/>
+    </changeSet>
+    <changeSet id="1704032191093-22" author="HP (generated)">
+        <dropTable cascadeConstraints="true" tableName="task"/>
+    </changeSet>
+    <changeSet id="1704032191093-23" author="HP (generated)">
+        <dropTable cascadeConstraints="true" tableName="task_replacement"/>
+    </changeSet>
+    <changeSet id="1704032191093-24" author="HP (generated)">
+        <dropTable cascadeConstraints="true" tableName="tasks_to_tags"/>
+    </changeSet>
+    <changeSet id="1704032191093-25" author="HP (generated)">
+        <dropTable cascadeConstraints="true" tableName="user"/>
+    </changeSet>
+
+</databaseChangeLog>

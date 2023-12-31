@@ -3,25 +3,25 @@ package com.ayoub.taskflow.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 @Builder
-@Table(name = "tags")
+@Table(name = "task_tags")
 @Entity
-public class Tag {
+public class TaskTag {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "task_id")
+    private Task task;
 
-    @OneToMany(mappedBy = "tag")
-    private Set<TaskTag> taskTags = new HashSet<>();
+    @ManyToOne
+    @JoinColumn(name = "tag_id")
+    private Tag tag;
 
 }

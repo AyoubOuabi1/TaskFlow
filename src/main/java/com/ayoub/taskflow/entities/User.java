@@ -1,30 +1,33 @@
 package com.ayoub.taskflow.entities;
-
 import com.ayoub.taskflow.entities.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.Collection;
-import java.util.List;
+import java.util.Set;
 
-@Entity
-@Data
-@AllArgsConstructor
+
 @NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 @Builder
-public class User  {
+
+@Table(name = "users")
+@Entity
+public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String firstName;
-    private String lastName;
-    private String email;
-    private int token;
-    private String password;
+
+    private String username;
+
     @Enumerated(EnumType.STRING)
     private Role role;
+    @OneToMany(mappedBy = "assignee", cascade = CascadeType.ALL)
+    private Set<Task> assignedTasks;
 
-
-
+    public Long getId() {
+        return id;
+    }
 }

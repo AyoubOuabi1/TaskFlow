@@ -1,9 +1,8 @@
 package com.ayoub.taskflow.entities.enums;
 
 public enum TaskStatus {
-
-    NOT_STARTED,
+    TODO,
     IN_PROGRESS,
-    EXPIRED,
-    DONE
+    COMPLETED,
+    NEGLECTED
 }

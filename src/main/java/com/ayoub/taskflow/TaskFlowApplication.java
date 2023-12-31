@@ -12,8 +12,5 @@ public class TaskFlowApplication {
         SpringApplication.run(TaskFlowApplication.class, args);
     }
 
-    @Bean
-    public ModelMapper modelMapper() {
-        return new ModelMapper();
-    }
+
 }
