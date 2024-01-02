@@ -1,5 +1,6 @@
 package com.ayoub.taskflow.service.serviceImpl;
 
+import com.ayoub.taskflow.dto.TagDTO;
 import com.ayoub.taskflow.dto.TaskDTO;
 import com.ayoub.taskflow.dto.UserDTO;
 import com.ayoub.taskflow.entities.enums.Role;
@@ -8,9 +9,6 @@ import com.ayoub.taskflow.exception.InvalidDateRangeException;
 import com.ayoub.taskflow.exception.TagNotFoundException;
 import com.ayoub.taskflow.exception.TaskNotFoundException;
 import com.ayoub.taskflow.exception.UserNotFoundException;
-import com.ayoub.taskflow.mapper.TagMapper;
-import com.ayoub.taskflow.mapper.TaskMapper;
-import com.ayoub.taskflow.mapper.UserMapper;
 import com.ayoub.taskflow.entities.*;
 import com.ayoub.taskflow.repository.TagRepository;
 import com.ayoub.taskflow.repository.TaskRepository;
@@ -18,9 +16,11 @@ import com.ayoub.taskflow.repository.TaskTagRepository;
 import com.ayoub.taskflow.service.TaskService;
 import com.ayoub.taskflow.service.UserService;
 import com.ayoub.taskflow.service.TagService;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,38 +29,40 @@ import java.util.stream.Collectors;
 public class TaskServiceImpl implements TaskService {
     private final TagRepository tagRepository;
     private final TaskRepository taskRepository;
-    private final TaskMapper taskMapper;
     private final UserService userService;
 
-    private final UserMapper userMapper;
     private final TagService tagService;
-    private final TagMapper tagMapper;
+    private final ModelMapper modelMapper;
 
     private  final TaskTagRepository taskTagRepository;
 
-     public TaskServiceImpl(TaskRepository taskRepository, TaskMapper taskMapper, UserService userService, TagService tagService,
-                           UserMapper userMapper, TagRepository tagRepository ,TagMapper tagMapper, TaskTagRepository taskTagRepository) {
+     public TaskServiceImpl(TaskRepository taskRepository,
+                            ModelMapper modelMapper,
+                            UserService userService,
+                            TagService tagService,
+                            TagRepository tagRepository,
+                            TaskTagRepository taskTagRepository) {
         this.taskRepository = taskRepository;
-        this.taskMapper = taskMapper;
-        this.userService = userService;
+         this.userService = userService;
         this.tagService = tagService;
-        this.userMapper = userMapper;
-        this.tagRepository = tagRepository;
-        this.tagMapper = tagMapper;
+         this.tagRepository = tagRepository;
+        this.modelMapper = modelMapper;
         this.taskTagRepository = taskTagRepository;
     }
 
     @Override
     public List<TaskDTO> getAllTasks() {
         List<Task> tasks = taskRepository.findAll();
-        return tasks.stream().map(taskMapper::toTaskDto).collect(Collectors.toList());
+        return tasks.stream()
+                .map(task->modelMapper.map(task, TaskDTO.class))
+                .collect(Collectors.toList());
     }
 
     @Override
     public TaskDTO getTaskById(Long taskId) {
         Task task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
-        return taskMapper.toTaskDto(task);
+        return modelMapper.map(task, TaskDTO.class);
     }
 
     @Override
@@ -69,14 +71,14 @@ public class TaskServiceImpl implements TaskService {
 
         boolean isManager = userService.isUserManager(currentUserId);
 
-        Task task = taskMapper.toTask(taskDto);
+        Task task = modelMapper.map(taskDto, Task.class);
 
         if (taskDto.getStartDate() != null) {
             LocalDate currentDate = LocalDate.now();
             LocalDate allowedStartDate = currentDate.plusDays(3);
 
             if (taskDto.getStartDate().isAfter(allowedStartDate)) {
-                throw new InvalidDateRangeException("The start date is between 3 days from the current day");
+                throw new InvalidDateRangeException("The start date must be before 3 days from the current day");
             }
         }
         if (taskDto.getStartDate() != null && taskDto.getEndDate() != null
@@ -88,7 +90,7 @@ public class TaskServiceImpl implements TaskService {
 
             if (isManager || currentUserId.equals(taskDto.getAssigneeId())) {
                 UserDTO user = userService.getUserById(taskDto.getAssigneeId());
-                task.setAssignee(userMapper.dtoToEntity(user));
+                task.setAssignee(modelMapper.map(user, User.class));
             } else {
                 throw new InvalidDateRangeException("You are not authorized to assign tasks to other users");
             }
@@ -96,15 +98,13 @@ public class TaskServiceImpl implements TaskService {
 
         // createdBy
         UserDTO createdBy = userService.getUserById(currentUserId);
-        task.setCreatedBy(userMapper.dtoToEntity(createdBy));
+        task.setCreatedBy(modelMapper.map(createdBy, User.class));
 
         Task savedTask = taskRepository.save(task);
 
         if (taskDto.getTagIds() != null && !taskDto.getTagIds().isEmpty()) {
             Set<Long> tagIds = taskDto.getTagIds();
-            Set<Tag> existingTags = tagRepository.findAllById(tagIds)
-                    .stream()
-                    .collect(Collectors.toSet());
+            Set<Tag> existingTags = new HashSet<>(tagRepository.findAllById(tagIds));
 
             Set<Long> nonExistingTagIds = tagIds.stream()
                     .filter(tagId -> existingTags.stream().noneMatch(tag -> tag.getId().equals(tagId)))
@@ -121,7 +121,7 @@ public class TaskServiceImpl implements TaskService {
             taskTagRepository.saveAll(taskTags);
         }
 
-        return taskMapper.toTaskDto(savedTask);
+        return modelMapper.map(savedTask, TaskDTO.class);
     }
 
 
@@ -164,7 +164,7 @@ public class TaskServiceImpl implements TaskService {
         task.setStatus(TaskStatus.COMPLETED);
         Task savedTask = taskRepository.save(task);
 
-        return taskMapper.toTaskDto(savedTask);
+        return modelMapper.map(savedTask, TaskDTO.class);
     }
 
     private void validateAssigneeAndTagsExistence(TaskDTO taskDto) {

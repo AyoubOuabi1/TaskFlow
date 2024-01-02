@@ -1,10 +1,10 @@
 package com.ayoub.taskflow.service.serviceImpl;
 import com.ayoub.taskflow.dto.TagDTO;
 import com.ayoub.taskflow.exception.TagNotFoundException;
-import com.ayoub.taskflow.mapper.TagMapper;
 import com.ayoub.taskflow.entities.Tag;
 import com.ayoub.taskflow.repository.TagRepository;
 import com.ayoub.taskflow.service.TagService;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,31 +15,34 @@ import java.util.stream.Collectors;
 public class TagServiceImpl implements TagService {
 
     private final TagRepository tagRepository;
-    private final TagMapper tagMapper;
+    private final ModelMapper modelMapper;
 
-     public TagServiceImpl(TagRepository tagRepository, TagMapper tagMapper) {
+     public TagServiceImpl(TagRepository tagRepository, ModelMapper modelMapper) {
         this.tagRepository = tagRepository;
-        this.tagMapper = tagMapper;
+        this.modelMapper = modelMapper;
     }
 
     @Override
     public List<TagDTO> getAllTags() {
         List<Tag> tags = tagRepository.findAll();
-        return tags.stream().map(tagMapper::toTagDTO).collect(Collectors.toList());
+        return tags.stream()
+                .map(tag ->
+                        modelMapper.map(tag,TagDTO.class))
+                .collect(Collectors.toList());
     }
 
     @Override
     public TagDTO getTagById(Long tagId) {
         Tag tag = tagRepository.findById(tagId)
                 .orElseThrow(() -> new TagNotFoundException("Tag not found with id: " + tagId));
-        return tagMapper.toTagDTO(tag);
+        return modelMapper.map(tag,TagDTO.class);
     }
 
     @Override
     public TagDTO createTag(TagDTO tagDTO) {
-        Tag tag = tagMapper.toTag(tagDTO);
+        Tag tag = modelMapper.map(tagDTO,Tag.class);
         Tag savedTag = tagRepository.save(tag);
-        return tagMapper.toTagDTO(savedTag);
+        return modelMapper.map(savedTag,TagDTO.class);
     }
 
     @Override

@@ -5,13 +5,12 @@ import com.ayoub.taskflow.dto.UserDTO;
 import com.ayoub.taskflow.entities.enums.RequestStatus;
 import com.ayoub.taskflow.entities.enums.RequestType;
 import com.ayoub.taskflow.exception.InvalidDateRangeException;
-import com.ayoub.taskflow.mapper.RequestMapper;
-import com.ayoub.taskflow.mapper.UserMapper;
 import com.ayoub.taskflow.entities.*;
 import com.ayoub.taskflow.repository.RequestRepository;
 import com.ayoub.taskflow.repository.TaskRepository;
 import com.ayoub.taskflow.service.RequestService;
 import com.ayoub.taskflow.service.UserService;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -21,18 +20,19 @@ import java.time.YearMonth;
 public class RequestServiceImpl implements RequestService {
 
     private final RequestRepository requestRepository;
-    private final RequestMapper requestMapper;
-    private final UserMapper userMapper;
+    ModelMapper modelMapper;
     private final UserService userService;
     private final TaskRepository taskRepository;
 
-     public RequestServiceImpl(RequestRepository requestRepository, RequestMapper requestMapper, UserService userService, TaskRepository taskRepository ,UserMapper userMapper) {
+     public RequestServiceImpl(RequestRepository requestRepository,
+                               ModelMapper modelMapper,
+                               UserService userService,
+                               TaskRepository taskRepository) {
         this.requestRepository = requestRepository;
-        this.requestMapper = requestMapper;
+        this.modelMapper = modelMapper;
         this.userService = userService;
         this.taskRepository = taskRepository;
-        this.userMapper = userMapper;
-    }
+     }
 
 
     @Override
@@ -55,10 +55,10 @@ public class RequestServiceImpl implements RequestService {
         requestDTO.setRequestType(requestType);
         requestDTO.setRequestDate(LocalDate.now());
 
-        Request request = requestMapper.toRequest(requestDTO);
+        Request request = modelMapper.map(requestDTO, Request.class);
 
 
-        request.setCreatedBy(userMapper.dtoToEntity(createdBy));
+        request.setCreatedBy(modelMapper.map(createdBy, User.class));
         request.setOldTask(oldTask);
 
         request.setRequestDate(LocalDate.now());
@@ -66,7 +66,7 @@ public class RequestServiceImpl implements RequestService {
         request.setRequestType(requestType);
 
         Request savedRequest = requestRepository.save(request);
-        return requestMapper.toRequestDTO(savedRequest);
+        return modelMapper.map(savedRequest,RequestDTO.class);
     }
 
     private void validateTokenUsage(Long createdById, RequestType requestType) {

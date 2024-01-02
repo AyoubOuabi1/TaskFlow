@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/taskflow/requests")
+@RequestMapping("/requests")
 public class RequestController {
 
     private final RequestService requestService;

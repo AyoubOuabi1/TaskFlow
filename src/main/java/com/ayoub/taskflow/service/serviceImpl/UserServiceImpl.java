@@ -1,10 +1,10 @@
 package com.ayoub.taskflow.service.serviceImpl;
 import com.ayoub.taskflow.dto.UserDTO;
 import com.ayoub.taskflow.exception.UserNotFoundException;
-import com.ayoub.taskflow.mapper.UserMapper;
-import com.ayoub.taskflow.entities.User;
+ import com.ayoub.taskflow.entities.User;
 import com.ayoub.taskflow.repository.UserRepository;
 import com.ayoub.taskflow.service.UserService;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -13,34 +13,35 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
+    private final ModelMapper userMapper;
 
 
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
+    public UserServiceImpl(UserRepository userRepository, ModelMapper userMapper) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        System.out.println();
     }
 
     @Override
     public List<UserDTO> getAllUsers() {
         List<User> users = userRepository.findAll();
-        return users.stream().map(userMapper::entityToDto).collect(Collectors.toList());
+        return users.stream().map(user->userMapper.map(user,UserDTO.class)).collect(Collectors.toList());
     }
 
     @Override
     public UserDTO getUserById(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
-        return userMapper.entityToDto(user);
+        return userMapper.map(user,UserDTO.class);
     }
 
     @Override
     public UserDTO createUser(UserDTO userDTO) {
 
-        User user = userMapper.dtoToEntity(userDTO);
+        User user = userMapper.map(userDTO,User.class);
 
         User savedUser = userRepository.save(user);
-        return userMapper.entityToDto(savedUser);
+        return userMapper.map(savedUser,UserDTO.class);
     }
 
     @Override
@@ -48,9 +49,9 @@ public class UserServiceImpl implements UserService {
         userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
         userDTO.setId(userId);
-        User updatedUser = userRepository.save(userMapper.dtoToEntity(userDTO));
+        User updatedUser = userRepository.save(userMapper.map(userDTO,User.class));
 
-        return userMapper.entityToDto(updatedUser);
+        return userMapper.map(updatedUser,UserDTO.class);
     }
 
     @Override

@@ -24,10 +24,9 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
     @OneToMany(mappedBy = "assignee", cascade = CascadeType.ALL)
     private Set<Task> assignedTasks;
 
-    public Long getId() {
-        return id;
-    }
+
 }
