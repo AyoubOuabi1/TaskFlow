@@ -1,6 +1,6 @@
 package com.ayoub.taskflow.service.serviceImpl;
 import com.ayoub.taskflow.dto.UserDTO;
-import com.ayoub.taskflow.exception.UserNotFoundException;
+import com.ayoub.taskflow.exception.NotFoundException;
  import com.ayoub.taskflow.entities.User;
 import com.ayoub.taskflow.repository.UserRepository;
 import com.ayoub.taskflow.service.UserService;
@@ -31,7 +31,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO getUserById(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         return userMapper.map(user,UserDTO.class);
     }
 
@@ -47,7 +47,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO updateUser(Long userId, UserDTO userDTO) {
         userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         userDTO.setId(userId);
         User updatedUser = userRepository.save(userMapper.map(userDTO,User.class));
 
@@ -57,7 +57,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteUser(Long userId) {
         userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
 
         userRepository.deleteById(userId);
     }
@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean isUserManager(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found with ID: " + userId));
         return "MANAGER".equalsIgnoreCase(user.getRole().toString());
     }
 }

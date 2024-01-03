@@ -9,6 +9,7 @@ import com.ayoub.taskflow.entities.*;
 import com.ayoub.taskflow.repository.RequestRepository;
 import com.ayoub.taskflow.repository.TaskRepository;
 import com.ayoub.taskflow.service.RequestService;
+import com.ayoub.taskflow.service.TaskService;
 import com.ayoub.taskflow.service.UserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -22,16 +23,16 @@ public class RequestServiceImpl implements RequestService {
     private final RequestRepository requestRepository;
     ModelMapper modelMapper;
     private final UserService userService;
-    private final TaskRepository taskRepository;
+    private final TaskService taskService;
 
      public RequestServiceImpl(RequestRepository requestRepository,
                                ModelMapper modelMapper,
                                UserService userService,
-                               TaskRepository taskRepository) {
+                               TaskService taskService) {
         this.requestRepository = requestRepository;
         this.modelMapper = modelMapper;
         this.userService = userService;
-        this.taskRepository = taskRepository;
+        this.taskService = taskService;
      }
 
 
@@ -43,9 +44,7 @@ public class RequestServiceImpl implements RequestService {
         RequestStatus requestStatus = requestDTO.getRequestStatus();
 
         UserDTO createdBy = userService.getUserById(createdById);
-        Task oldTask = taskRepository.findById(oldTaskId)
-                .orElseThrow(() -> new InvalidDateRangeException("Task not found with id: " + oldTaskId));
-
+        Task oldTask = modelMapper.map(taskService.getTaskById(oldTaskId),Task.class);
 
         validateTokenUsage(createdById, requestType);
 
@@ -71,7 +70,7 @@ public class RequestServiceImpl implements RequestService {
 
     private void validateTokenUsage(Long createdById, RequestType requestType) {
 
-        long countDay = requestRepository.countBycreatedByIdAndRequestDateAndRequestType(createdById, LocalDate.now(), RequestType.TASK_REPLACEMENT);
+        long countDay = requestRepository.countBy(createdById, LocalDate.now(), RequestType.TASK_REPLACEMENT);
 
         YearMonth yearMonth = YearMonth.now();
         LocalDate startOfMonth = yearMonth.atDay(1);

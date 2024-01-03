@@ -9,7 +9,7 @@ import java.util.List;
 public interface TaskService {
     List<TaskDTO> getAllTasks();
 
-    TaskDTO getTaskById(Long taskId) throws ChangeSetPersister.NotFoundException;
+    TaskDTO getTaskById(Long taskId);
 
     TaskDTO createTask(TaskDTO taskDto, Long currentUserId);
 

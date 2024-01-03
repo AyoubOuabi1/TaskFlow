@@ -1,14 +1,11 @@
 package com.ayoub.taskflow.service.serviceImpl;
 
-import com.ayoub.taskflow.dto.TagDTO;
 import com.ayoub.taskflow.dto.TaskDTO;
 import com.ayoub.taskflow.dto.UserDTO;
 import com.ayoub.taskflow.entities.enums.Role;
 import com.ayoub.taskflow.entities.enums.TaskStatus;
 import com.ayoub.taskflow.exception.InvalidDateRangeException;
-import com.ayoub.taskflow.exception.TagNotFoundException;
-import com.ayoub.taskflow.exception.TaskNotFoundException;
-import com.ayoub.taskflow.exception.UserNotFoundException;
+import com.ayoub.taskflow.exception.NotFoundException;
 import com.ayoub.taskflow.entities.*;
 import com.ayoub.taskflow.repository.TagRepository;
 import com.ayoub.taskflow.repository.TaskRepository;
@@ -20,9 +17,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -60,9 +55,14 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskDTO getTaskById(Long taskId) {
-        Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
-        return modelMapper.map(task, TaskDTO.class);
+        Optional<Task> task = taskRepository.findById(taskId);
+        if(task.isPresent()){
+            return modelMapper.map(task.get(), TaskDTO.class);
+
+        }else {
+            throw new NotFoundException("Task not found with id: " + taskId);
+        }
+
     }
 
     @Override
@@ -111,7 +111,7 @@ public class TaskServiceImpl implements TaskService {
                     .collect(Collectors.toSet());
 
             if (!nonExistingTagIds.isEmpty()) {
-                throw new TagNotFoundException("Tags not found with IDs: " + nonExistingTagIds);
+                throw new NotFoundException("Tags not found with IDs: " + nonExistingTagIds);
             }
 
             Set<TaskTag> taskTags = existingTags.stream()
@@ -135,30 +135,30 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void deleteTask(Long taskId, Long currentUserId) {
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + taskId));
+                .orElseThrow(() -> new NotFoundException("Task not found with id: " + taskId));
         UserDTO loggedInUser = userService.getUserById(currentUserId);
-        if (currentUserId  == task.getCreatedBy().getId()) {
+        if (Objects.equals(currentUserId, task.getCreatedBy().getId())) {
             taskRepository.deleteById(taskId);
             System.out.println("deleted");
         } else if (loggedInUser.getRole() == Role.MANAGER) {
             taskRepository.deleteById(taskId);
             System.out.println("deleted");
         } else {
-            throw new UserNotFoundException("You do not have permission to delete this task.");
+            throw new NotFoundException("You do not have permission to delete this task.");
         }
     }
     @Override
     public TaskDTO completeTask(Long taskId) {
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new TaskNotFoundException("Task not found with ID: " + taskId));
+                .orElseThrow(() -> new NotFoundException("Task not found with ID: " + taskId));
 
         if (task.getStatus() == TaskStatus.COMPLETED) {
-            throw new TaskNotFoundException("Task is already marked as completed");
+            throw new NotFoundException("Task is already marked as completed");
         }
 
         LocalDate currentDate = LocalDate.now();
         if (task.getEndDate() != null && currentDate.isAfter(task.getEndDate())) {
-            throw new TaskNotFoundException("Task cannot be completed after the deadline");
+            throw new NotFoundException("Task cannot be completed after the deadline");
         }
 
         task.setStatus(TaskStatus.COMPLETED);
@@ -169,13 +169,13 @@ public class TaskServiceImpl implements TaskService {
 
     private void validateAssigneeAndTagsExistence(TaskDTO taskDto) {
         if (taskDto.getAssigneeId() != null && !userService.existsById(taskDto.getAssigneeId())) {
-            throw new UserNotFoundException("User not found with id: " + taskDto.getAssigneeId());
+            throw new NotFoundException("User not found with id: " + taskDto.getAssigneeId());
         }
 
         if (taskDto.getTagIds() != null) {
             for (Long tagId : taskDto.getTagIds()) {
                 if (!tagService.existsById(tagId)) {
-                    throw new TagNotFoundException("Tag not found with id: " + tagId);
+                    throw new NotFoundException("Tag not found with id: " + tagId);
                 }
             }
         }

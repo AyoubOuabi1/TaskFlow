@@ -1,7 +1,7 @@
 package com.ayoub.taskflow.service.serviceImpl;
 import com.ayoub.taskflow.dto.TagDTO;
-import com.ayoub.taskflow.exception.TagNotFoundException;
 import com.ayoub.taskflow.entities.Tag;
+import com.ayoub.taskflow.exception.NotFoundException;
 import com.ayoub.taskflow.repository.TagRepository;
 import com.ayoub.taskflow.service.TagService;
 import org.modelmapper.ModelMapper;
@@ -34,7 +34,7 @@ public class TagServiceImpl implements TagService {
     @Override
     public TagDTO getTagById(Long tagId) {
         Tag tag = tagRepository.findById(tagId)
-                .orElseThrow(() -> new TagNotFoundException("Tag not found with id: " + tagId));
+                .orElseThrow(() -> new NotFoundException("Tag not found with id: " + tagId));
         return modelMapper.map(tag,TagDTO.class);
     }
 
@@ -54,7 +54,7 @@ public class TagServiceImpl implements TagService {
     @Override
     public void deleteTag(Long tagId) {
         Tag tag = tagRepository.findById(tagId)
-                .orElseThrow(() -> new TagNotFoundException("Tag not found with id: " + tagId));
+                .orElseThrow(() -> new NotFoundException("Tag not found with id: " + tagId));
             tagRepository.deleteById(tagId);
 
     }
@@ -66,11 +66,6 @@ public class TagServiceImpl implements TagService {
         }
         return false;
     }
-    @Override
-    public Set<Tag> getTagsByIds(Set<Long> tagIds) {
-        return tagRepository.findAllById(tagIds)
-                .stream()
-                .collect(Collectors.toSet());
-    }
+
 
 }

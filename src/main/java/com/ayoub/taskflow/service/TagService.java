@@ -18,5 +18,4 @@ public interface TagService {
 
     void deleteTag(Long tagId);
     boolean existsById(Long userId);
-    Set<Tag> getTagsByIds(Set<Long> tagIds);
 }
