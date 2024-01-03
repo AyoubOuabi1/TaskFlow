@@ -19,8 +19,7 @@ public class UserServiceImpl implements UserService {
     public UserServiceImpl(UserRepository userRepository, ModelMapper userMapper) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
-        System.out.println();
-    }
+     }
 
     @Override
     public List<UserDTO> getAllUsers() {

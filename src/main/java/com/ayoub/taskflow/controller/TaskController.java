@@ -22,7 +22,7 @@ public class TaskController {
     }
 
     @GetMapping("/{taskId}")
-    public ResponseEntity<TaskDTO> getTaskById(@PathVariable Long taskId) throws ChangeSetPersister.NotFoundException {
+    public ResponseEntity<TaskDTO> getTaskById(@PathVariable Long taskId)  {
         TaskDTO task = taskService.getTaskById(taskId);
         return ResponseEntity.ok(task);
     }
@@ -35,7 +35,8 @@ public class TaskController {
 
     @PutMapping("/{taskId}")
     public ResponseEntity<TaskDTO> updateTask(@PathVariable Long taskId, @RequestBody TaskDTO taskDto) {
-      return null ;
+        TaskDTO updateTask = taskService.updateTask(taskId, taskDto);
+        return ResponseEntity.ok(updateTask);
     }
 
     @DeleteMapping("/{taskId}/{currentUserId}")

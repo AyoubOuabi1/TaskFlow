@@ -7,8 +7,7 @@ import com.ayoub.taskflow.entities.enums.TaskStatus;
 import com.ayoub.taskflow.exception.InvalidDateRangeException;
 import com.ayoub.taskflow.exception.NotFoundException;
 import com.ayoub.taskflow.entities.*;
-import com.ayoub.taskflow.repository.TagRepository;
-import com.ayoub.taskflow.repository.TaskRepository;
+ import com.ayoub.taskflow.repository.TaskRepository;
 import com.ayoub.taskflow.repository.TaskTagRepository;
 import com.ayoub.taskflow.service.TaskService;
 import com.ayoub.taskflow.service.UserService;
@@ -47,7 +46,7 @@ public class TaskServiceImpl implements TaskService {
         List<Task> tasks = taskRepository.findAll();
         return tasks.stream()
                 .map(task->modelMapper.map(task, TaskDTO.class))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -64,43 +63,62 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public TaskDTO createTask(TaskDTO taskDto, Long currentUserId) {
+        validateStartDate(taskDto.getStartDate());
         validateAssigneeAndTagsExistence(taskDto);
 
         boolean isManager = userService.isUserManager(currentUserId);
 
-        Task task = modelMapper.map(taskDto, Task.class);
+        Task task = createTaskEntity(taskDto, currentUserId, isManager);
+        Task savedTask = taskRepository.save(task);
 
-        if (taskDto.getStartDate() != null) {
+        saveTaskTags(taskDto.getTagIds(), savedTask);
+
+        return modelMapper.map(savedTask, TaskDTO.class);
+    }
+
+    public void validateStartDate(LocalDate startDate) {
+        if (startDate != null && startDate.isBefore(LocalDate.now())) {
+            throw new InvalidDateRangeException("The start date must be after the current date");
+        }
+
+        if (startDate != null) {
             LocalDate currentDate = LocalDate.now();
             LocalDate allowedStartDate = currentDate.plusDays(3);
 
-            if (taskDto.getStartDate().isAfter(allowedStartDate)) {
+            if (startDate.isAfter(allowedStartDate)) {
                 throw new InvalidDateRangeException("The start date must be before 3 days from the current day");
             }
         }
+    }
+
+    public Task createTaskEntity(TaskDTO taskDto, Long currentUserId, boolean isManager) {
+        Task task = modelMapper.map(taskDto, Task.class);
+
         if (taskDto.getStartDate() != null && taskDto.getEndDate() != null
                 && taskDto.getEndDate().isBefore(taskDto.getStartDate())) {
             throw new InvalidDateRangeException("End date must be after start date");
         }
 
         if (taskDto.getAssigneeId() != null) {
-
-            if (isManager || currentUserId.equals(taskDto.getAssigneeId())) {
-                UserDTO user = userService.getUserById(taskDto.getAssigneeId());
-                task.setAssignee(modelMapper.map(user, User.class));
-            } else {
-                throw new InvalidDateRangeException("You are not authorized to assign tasks to other users");
-            }
+            validateAssigneeAuthorization(taskDto.getAssigneeId(), currentUserId, isManager);
+            UserDTO user = userService.getUserById(taskDto.getAssigneeId());
+            task.setAssignee(modelMapper.map(user, User.class));
         }
 
-        // createdBy
         UserDTO createdBy = userService.getUserById(currentUserId);
         task.setCreatedBy(modelMapper.map(createdBy, User.class));
 
-        Task savedTask = taskRepository.save(task);
+        return task;
+    }
 
-        if (taskDto.getTagIds() != null && !taskDto.getTagIds().isEmpty()) {
-            Set<Long> tagIds = taskDto.getTagIds();
+    public  void validateAssigneeAuthorization(Long assigneeId, Long currentUserId, boolean isManager) {
+        if (!isManager && !currentUserId.equals(assigneeId)) {
+            throw new InvalidDateRangeException("You are not authorized to assign tasks to other users");
+        }
+    }
+
+    private void saveTaskTags(Set<Long> tagIds, Task savedTask) {
+        if (tagIds != null && !tagIds.isEmpty()) {
             Set<Tag> existingTags = new HashSet<>(tagService.findAllTagsById(tagIds));
 
             Set<Long> nonExistingTagIds = tagIds.stream()
@@ -110,23 +128,31 @@ public class TaskServiceImpl implements TaskService {
             if (!nonExistingTagIds.isEmpty()) {
                 throw new NotFoundException("Tags not found with IDs: " + nonExistingTagIds);
             }
+
             Set<TaskTag> taskTags = existingTags.stream()
                     .map(tag -> TaskTag.builder().tag(tag).task(savedTask).build())
                     .collect(Collectors.toSet());
 
             taskTagRepository.saveAll(taskTags);
         }
-
-        return modelMapper.map(savedTask, TaskDTO.class);
     }
+
 
 
 
 
     @Override
     public TaskDTO updateTask(Long taskId, TaskDTO taskDto) {
-        return null;
+         Task existingTask = taskRepository.findById(taskId)
+                .orElseThrow(() -> new NotFoundException("Task not found with id: " + taskId));
+         modelMapper.map(taskDto, existingTask);
+         existingTask.setId(taskId);
+         existingTask.setAssignee(modelMapper.map(userService.getUserById(taskDto.getAssigneeId()), User.class));
+         existingTask.setCreatedBy(modelMapper.map(userService.getUserById(taskDto.getCreatedById()), User.class));
+         Task updatedTask = taskRepository.save(existingTask);
+         return modelMapper.map(updatedTask, TaskDTO.class);
     }
+
 
     @Override
     public void deleteTask(Long taskId, Long currentUserId) {
@@ -134,12 +160,10 @@ public class TaskServiceImpl implements TaskService {
                 .orElseThrow(() -> new NotFoundException("Task not found with id: " + taskId));
         UserDTO loggedInUser = userService.getUserById(currentUserId);
         if (Objects.equals(currentUserId, task.getCreatedBy().getId())) {
-            taskRepository.deleteById(taskId);
-            System.out.println("deleted");
-        } else if (loggedInUser.getRole() == Role.MANAGER) {
-            taskRepository.deleteById(taskId);
-            System.out.println("deleted");
-        } else {
+            taskRepository.delete(task);
+         } else if (loggedInUser.getRole() == Role.MANAGER) {
+            taskRepository.delete(task);
+         } else {
             throw new NotFoundException("You do not have permission to delete this task.");
         }
     }

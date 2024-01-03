@@ -70,27 +70,24 @@ public class RequestServiceImpl implements RequestService {
 
     private void validateTokenUsage(Long createdById, RequestType requestType) {
 
-        long countDay = requestRepository.countBy(createdById, LocalDate.now(), RequestType.TASK_REPLACEMENT);
+        long countDay = requestRepository.countDay(createdById, LocalDate.now(), RequestType.TASK_REPLACEMENT);
 
         YearMonth yearMonth = YearMonth.now();
         LocalDate startOfMonth = yearMonth.atDay(1);
         LocalDate endOfMonth = yearMonth.atEndOfMonth();
 
 
-        Long monthlyDeletion = requestRepository.countBycreatedByIdAndRequestDateBetweenAndRequestType(
+        long monthlyDeletion = requestRepository.countBycreatedByIdAndRequestDateBetweenAndRequestType(
                 createdById, startOfMonth, endOfMonth, RequestType.TASK_DELETED
         );
 
-        if (RequestType.TASK_REPLACEMENT.equals(requestType)) {
+        if (RequestType.TASK_REPLACEMENT.equals(requestType) &&countDay >= 2) {
+            throw new InvalidDateRangeException("You dont have replacement tokens for today");
 
-            if (countDay >= 2) {
-                throw new InvalidDateRangeException("You dont have replacement tokens for today");
-            }
-        } else if (RequestType.TASK_DELETED.equals(requestType)) {
-
-            if (monthlyDeletion >= 1) {
+        } else if (RequestType.TASK_DELETED.equals(requestType) && (monthlyDeletion >= 1)) {
                 throw new InvalidDateRangeException("You dont have deletion tokens for this month");
-            }
+
         }
     }
+
 }
