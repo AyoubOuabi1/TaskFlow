@@ -39,6 +39,11 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
+    public List<Tag> findAllTagsById(Set<Long> tagIds) {
+        return tagRepository.findAllById(tagIds);
+    }
+
+    @Override
     public TagDTO createTag(TagDTO tagDTO) {
         Tag tag = modelMapper.map(tagDTO,Tag.class);
         Tag savedTag = tagRepository.save(tag);

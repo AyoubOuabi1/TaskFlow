@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class TaskServiceImpl implements TaskService {
-    private final TagRepository tagRepository;
     private final TaskRepository taskRepository;
     private final UserService userService;
 
@@ -35,13 +34,11 @@ public class TaskServiceImpl implements TaskService {
                             ModelMapper modelMapper,
                             UserService userService,
                             TagService tagService,
-                            TagRepository tagRepository,
-                            TaskTagRepository taskTagRepository) {
+                             TaskTagRepository taskTagRepository) {
         this.taskRepository = taskRepository;
          this.userService = userService;
         this.tagService = tagService;
-         this.tagRepository = tagRepository;
-        this.modelMapper = modelMapper;
+         this.modelMapper = modelMapper;
         this.taskTagRepository = taskTagRepository;
     }
 
@@ -104,7 +101,7 @@ public class TaskServiceImpl implements TaskService {
 
         if (taskDto.getTagIds() != null && !taskDto.getTagIds().isEmpty()) {
             Set<Long> tagIds = taskDto.getTagIds();
-            Set<Tag> existingTags = new HashSet<>(tagRepository.findAllById(tagIds));
+            Set<Tag> existingTags = new HashSet<>(tagService.findAllTagsById(tagIds));
 
             Set<Long> nonExistingTagIds = tagIds.stream()
                     .filter(tagId -> existingTags.stream().noneMatch(tag -> tag.getId().equals(tagId)))
@@ -113,7 +110,6 @@ public class TaskServiceImpl implements TaskService {
             if (!nonExistingTagIds.isEmpty()) {
                 throw new NotFoundException("Tags not found with IDs: " + nonExistingTagIds);
             }
-
             Set<TaskTag> taskTags = existingTags.stream()
                     .map(tag -> TaskTag.builder().tag(tag).task(savedTask).build())
                     .collect(Collectors.toSet());

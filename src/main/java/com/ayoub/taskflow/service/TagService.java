@@ -11,7 +11,7 @@ public interface TagService {
     List<TagDTO> getAllTags();
 
     TagDTO getTagById(Long tagId);
-
+    List<Tag> findAllTagsById(Set<Long> tagIds);
     TagDTO createTag(TagDTO tagDTO);
 
     TagDTO updateTag(Long tagId, TagDTO tagDTO);
