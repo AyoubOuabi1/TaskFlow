@@ -29,7 +29,7 @@ public class TaskServiceImpl implements TaskService {
 
     private  final TaskTagRepository taskTagRepository;
 
-     public TaskServiceImpl(TaskRepository taskRepository,
+    public TaskServiceImpl(TaskRepository taskRepository,
                             ModelMapper modelMapper,
                             UserService userService,
                             TagService tagService,
@@ -56,7 +56,7 @@ public class TaskServiceImpl implements TaskService {
             return modelMapper.map(task.get(), TaskDTO.class);
 
         }else {
-            throw new NotFoundException("Task not found with id: " + taskId);
+            throw new NotFoundException(notFound(taskId));
         }
 
     }
@@ -144,7 +144,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public TaskDTO updateTask(Long taskId, TaskDTO taskDto) {
          Task existingTask = taskRepository.findById(taskId)
-                .orElseThrow(() -> new NotFoundException("Task not found with id: " + taskId));
+                .orElseThrow(() -> new NotFoundException(notFound(taskId)));
          modelMapper.map(taskDto, existingTask);
          existingTask.setId(taskId);
          existingTask.setAssignee(modelMapper.map(userService.getUserById(taskDto.getAssigneeId()), User.class));
@@ -157,7 +157,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public void deleteTask(Long taskId, Long currentUserId) {
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new NotFoundException("Task not found with id: " + taskId));
+                .orElseThrow(() -> new NotFoundException(notFound(taskId)));
         UserDTO loggedInUser = userService.getUserById(currentUserId);
         if (Objects.equals(currentUserId, task.getCreatedBy().getId())) {
             taskRepository.delete(task);
@@ -170,7 +170,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public TaskDTO completeTask(Long taskId) {
         Task task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new NotFoundException("Task not found with ID: " + taskId));
+                .orElseThrow(() -> new NotFoundException(notFound(taskId)));
 
         if (task.getStatus() == TaskStatus.COMPLETED) {
             throw new NotFoundException("Task is already marked as completed");
@@ -199,5 +199,9 @@ public class TaskServiceImpl implements TaskService {
                 }
             }
         }
+    }
+
+    private String notFound(Long taskId) {
+        return "Task not found with id: "+taskId;
     }
 }
